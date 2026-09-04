@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireRole, handleAuthError } from '@/lib/rbac';
-import { Role } from '@prisma/client';
+import { Role, ApplicationStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/applications/[id]/assign -> Restricted strictly to PROGRAM_OFFICER
@@ -10,7 +10,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
-    await requireRole([Role.PROGRAM_OFFICER]);
+    const session = await requireRole([Role.PROGRAM_OFFICER]);
     const { reviewerId, dueDate } = await request.json();
 
     if (!reviewerId || !dueDate) {
@@ -24,6 +24,13 @@ export async function POST(
         dueDate: new Date(dueDate),
       },
     });
+
+    // Auto-transition status from SUBMITTED -> ASSIGNED if current status is SUBMITTED
+    const application = await prisma.application.findUnique({ where: { id } });
+    if (application && application.status === ApplicationStatus.SUBMITTED) {
+      const { transitionApplicationStatus } = await import('@/lib/stateMachine');
+      await transitionApplicationStatus(id, ApplicationStatus.ASSIGNED, session.user.id);
+    }
 
     return NextResponse.json({ success: true, assignment }, { status: 201 });
   } catch (error) {

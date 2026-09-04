@@ -226,6 +226,42 @@ export default function ApplicationsManager() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      {app.status === 'ASSIGNED' && (
+                        <button
+                          onClick={async () => {
+                            const res = await fetch(`/api/applications/${app.id}/status`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ targetStatus: 'UNDER_REVIEW' }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) alert(data.error);
+                            else fetchApplications();
+                          }}
+                          className="text-xs font-medium text-purple-400 hover:text-purple-300 px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20"
+                        >
+                          Start Review
+                        </button>
+                      )}
+
+                      {app.status === 'UNDER_REVIEW' && (
+                        <button
+                          onClick={async () => {
+                            const res = await fetch(`/api/applications/${app.id}/status`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ targetStatus: 'DECIDED' }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) alert(data.error);
+                            else fetchApplications();
+                          }}
+                          className="text-xs font-medium text-emerald-400 hover:text-emerald-300 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20"
+                        >
+                          Mark Decided
+                        </button>
+                      )}
+
                       <button
                         onClick={() => openEditModal(app)}
                         className="text-xs font-medium text-indigo-400 hover:text-indigo-300 px-2.5 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition-colors"
