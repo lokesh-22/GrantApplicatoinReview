@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ApplicationsManager from '@/components/ApplicationsManager';
+import DashboardMetrics from '@/components/DashboardMetrics';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -24,6 +25,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        <DashboardMetrics />
         <ApplicationsManager />
       </div>
     </div>
