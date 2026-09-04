@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "postinstall": "prisma skills sync || exit 0"
+    "lint": "next lint"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -15,6 +15,7 @@
     "@prisma/client": "5.22.0",
     "bcryptjs": "^3.0.3",
     "next": "16.3.4",
+    "next-auth": "^4.24.15",
     "prisma": "5.22.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
