@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import AssignmentDrawer from '@/components/AssignmentDrawer';
+import ApplicationTimelineModal from '@/components/ApplicationTimelineModal';
 
 interface Application {
   id: string;
@@ -67,8 +68,9 @@ export default function ApplicationsTable() {
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
 
-  // Drawer state
+  // Drawer & Modal state
   const [assigningAppId, setAssigningAppId] = useState<string | null>(null);
+  const [timelineAppId, setTimelineAppId] = useState<string | null>(null);
 
   const fetchDirectory = async () => {
     setLoading(true);
@@ -296,16 +298,22 @@ export default function ApplicationsTable() {
                       <td className="px-6 py-4 text-xs text-slate-400">
                         {new Date(app.submissionDate).toLocaleDateString()}
                       </td>
-                      {session?.user?.role === 'PROGRAM_OFFICER' && (
-                        <td className="px-6 py-4 text-right space-x-2">
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => setTimelineAppId(app.id)}
+                          className="text-xs font-medium text-purple-400 hover:text-purple-300 px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20"
+                        >
+                          Timeline
+                        </button>
+                        {session?.user?.role === 'PROGRAM_OFFICER' && (
                           <button
                             onClick={() => setAssigningAppId(app.id)}
                             className="text-xs font-medium text-blue-400 hover:text-blue-300 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20"
                           >
                             Reviewers
                           </button>
-                        </td>
-                      )}
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -350,6 +358,13 @@ export default function ApplicationsTable() {
             setAssigningAppId(null);
             fetchDirectory();
           }}
+        />
+      )}
+      {timelineAppId && (
+        <ApplicationTimelineModal
+          applicationId={timelineAppId}
+          orgName={applications.find((a) => a.id === timelineAppId)?.orgName || ''}
+          onClose={() => setTimelineAppId(null)}
         />
       )}
     </div>
