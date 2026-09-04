@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PROGRAM_OFFICER
+  REVIEWER
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  ASSIGNED
+  UNDER_REVIEW
+  DECIDED
+}
+
+enum ReviewStatus {
+  DRAFT
+  COMPLETED
+}
+
+enum TimelineEventType {
+  CREATED
+  STATUS_CHANGED
+  ASSIGNED
+  ASSIGNMENT_REMOVED
+  COMMENT
+}
+
+model User {
+  id           String          @id @default(uuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime        @default(now())
+
+  // Relations
+  applications    Application[]    @relation("UserApplications")
+  assignments     Assignment[]     @relation("UserAssignments")
+  reviews         Review[]         @relation("UserReviews")
+  conflicts       ConflictOfInterest[] @relation("UserConflicts")
+  timelineEvents  TimelineEvent[]  @relation("ActorTimelineEvents")
+  alertDismissals AlertDismissal[] @relation("UserAlertDismissals")
+}
+
+model Application {
+  id              String            @id @default(uuid())
+  orgName         String
+  contactEmail    String
+  fundingRound    String
+  amountRequested Decimal           @db.Decimal(12, 2)
+  submissionDate  DateTime
+  ownerId         String
+  status          ApplicationStatus
+  archived        Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+
+  // Relations
+  owner           User              @relation("UserApplications", fields: [ownerId], references: [id])
+  assignments     Assignment[]
+  reviews         Review[]
+  conflicts       ConflictOfInterest[]
+  timelineEvents  TimelineEvent[]
+
+  // Indexes as requested: orgName, contactEmail, fundingRound, status, ownerId, submissionDate, amountRequested
+  @@index([orgName])
+  @@index([contactEmail])
+  @@index([fundingRound])
+  @@index([status])
+  @@index([ownerId])
+  @@index([submissionDate])
+  @@index([amountRequested])
+}
+
+model Assignment {
+  id            String    @id @default(uuid())
+  applicationId String
+  reviewerId    String
+  dueDate       DateTime
+  removedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewer    User        @relation("UserAssignments", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviews     Review[]
+  alertDismissals AlertDismissal[]
+
+  @@index([applicationId])
+  @@index([reviewerId])
+}
+
+model Review {
+  id              String       @id @default(uuid())
+  applicationId   String
+  reviewerId      String
+  assignmentId    String
+  impactScore     Int?
+  feasibilityScore Int?
+  budgetScore     Int?
+  comments        String?      @db.Text
+  status          ReviewStatus
+  completedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewer    User        @relation("UserReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  assignment  Assignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  // Unique constraint on (applicationId, reviewerId) as requested
+  @@unique([applicationId, reviewerId])
+  @@index([assignmentId])
+}
+
+model ConflictOfInterest {
+  id            String   @id @default(uuid())
+  applicationId String
+  reviewerId    String
+  reason        String   @db.Text
+  createdAt     DateTime @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  reviewer    User        @relation("UserConflicts", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([reviewerId])
+}
+
+model TimelineEvent {
+  id            String            @id @default(uuid())
+  applicationId String
+  type          TimelineEventType
+  oldValue      String?
+  newValue      String?
+  actorId       String
+  note          String?           @db.Text
+  createdAt     DateTime          @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  actor       User        @relation("ActorTimelineEvents", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([actorId])
+}
+
+model AlertDismissal {
+  id                  String   @id @default(uuid())
+  assignmentId        String
+  dismissedByUserId   String
+  dismissedAt         DateTime @default(now())
+  dueDateAtDismissal DateTime
+
+  // Relations
+  assignment    Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  dismissedByUser User     @relation("UserAlertDismissals", fields: [dismissedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([dismissedByUserId])
+}
