@@ -86,6 +86,25 @@ export async function transitionApplicationStatus(
       },
     });
 
+    // Dispatch Notification Hook if status is DECIDED
+    if (targetStatus === ApplicationStatus.DECIDED) {
+      const appOwner = await tx.application.findUnique({
+        where: { id: applicationId },
+        include: { owner: { select: { name: true, email: true } } },
+      });
+
+      if (appOwner && appOwner.owner) {
+        const { sendNotification } = await import('@/lib/notificationService');
+        await sendNotification({
+          type: 'APPLICATION_DECIDED',
+          recipientEmail: appOwner.owner.email,
+          recipientName: appOwner.owner.name,
+          applicationOrg: appOwner.orgName,
+          fundingRound: appOwner.fundingRound,
+        });
+      }
+    }
+
     return updatedApplication;
   });
 }

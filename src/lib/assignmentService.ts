@@ -75,6 +75,24 @@ export async function assignReviewerToApplication(
       },
     });
 
+    // Dispatch Notification Hook
+    const appInfo = await tx.application.findUnique({
+      where: { id: applicationId },
+      select: { orgName: true, fundingRound: true },
+    });
+
+    if (appInfo && assignment.reviewer) {
+      const { sendNotification } = await import('@/lib/notificationService');
+      await sendNotification({
+        type: 'REVIEWER_ASSIGNED',
+        recipientEmail: assignment.reviewer.email,
+        recipientName: assignment.reviewer.name,
+        applicationOrg: appInfo.orgName,
+        fundingRound: appInfo.fundingRound,
+        extraInfo: dueDate.toISOString().split('T')[0],
+      });
+    }
+
     // 5. Auto transition SUBMITTED -> ASSIGNED if application is currently SUBMITTED
     const app = await tx.application.findUnique({ where: { id: applicationId } });
     if (app && app.status === ApplicationStatus.SUBMITTED) {
