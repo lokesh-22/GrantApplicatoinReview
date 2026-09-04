@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import ApplicationsTable from '@/components/ApplicationsTable';
 import BulkAssignAndExportModal from '@/components/BulkAssignAndExportModal';
+import ReviewerCalibrationModal from '@/components/ReviewerCalibrationModal';
 
 interface ProgramOfficer {
   id: string;
@@ -15,6 +16,7 @@ export default function ApplicationsManager() {
   const { data: session } = useSession();
   const [modalOpen, setModalOpen] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [calibrationModalOpen, setCalibrationModalOpen] = useState(false);
 
   // Form states
   const [orgName, setOrgName] = useState('');
@@ -89,6 +91,12 @@ export default function ApplicationsManager() {
           <p className="text-slate-400 text-sm">Filter, search, sort, and manage grant applications</p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => setCalibrationModalOpen(true)}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium text-sm transition-colors shadow-sm cursor-pointer border border-slate-600"
+          >
+            📊 Calibration Report
+          </button>
           <button
             onClick={() => setBulkModalOpen(true)}
             className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium text-sm transition-colors shadow-sm cursor-pointer border border-slate-600"
@@ -213,6 +221,11 @@ export default function ApplicationsManager() {
             </form>
           </div>
         </div>
+      )}
+      {calibrationModalOpen && (
+        <ReviewerCalibrationModal
+          onClose={() => setCalibrationModalOpen(false)}
+        />
       )}
       {bulkModalOpen && (
         <BulkAssignAndExportModal

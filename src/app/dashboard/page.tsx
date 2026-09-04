@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import ApplicationsManager from '@/components/ApplicationsManager';
 import DashboardMetrics from '@/components/DashboardMetrics';
+import OverdueAlertsBar from '@/components/OverdueAlertsBar';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        <OverdueAlertsBar />
         <DashboardMetrics />
         <ApplicationsManager />
       </div>

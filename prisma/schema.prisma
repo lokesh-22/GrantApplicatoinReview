@@ -170,3 +170,11 @@ model AlertDismissal {
   @@index([assignmentId])
   @@index([dismissedByUserId])
 }
+
+model FundingRoundConfig {
+  id         String   @id @default(uuid())
+  roundName  String   @unique
+  totalPool  Decimal? @db.Decimal(14, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

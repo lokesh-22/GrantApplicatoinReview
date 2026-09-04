@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import AssignmentDrawer from '@/components/AssignmentDrawer';
 import ApplicationTimelineModal from '@/components/ApplicationTimelineModal';
+import FundingPoolProgressBar from '@/components/FundingPoolProgressBar';
 
 interface Application {
   id: string;
@@ -234,6 +235,9 @@ export default function ApplicationsTable() {
           </div>
         </div>
       </div>
+
+      {/* Funding Pool Progress Bar (rendered when a round filter is selected and configured) */}
+      {fundingRound && <FundingPoolProgressBar fundingRound={fundingRound} />}
 
       {/* Applications Directory Table */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-lg">
